@@ -293,4 +293,3 @@ export const vGroupUngroupTarget: Directive<HTMLElement, boolean> = {
     ungroupDropStates.delete(el)
   }
 }
-}
