@@ -44,12 +44,12 @@ interface ItemReorderBinding {
 
 const reorderStates = new WeakMap<
   HTMLElement,
-  { value: ItemReorderBinding; cleanup: () => void }
+  { value: ItemReorderBinding; cleanup?: () => void }
 >()
 
 export const vGroupItemReorder: Directive<HTMLElement, ItemReorderBinding> = {
   mounted(el, { value }) {
-    const state = { value, cleanup: () => {} }
+    const state: { value: ItemReorderBinding; cleanup?: () => void } = { value }
     const store = useInputGroupStore()
 
     state.cleanup = dropTargetForElements({
@@ -102,7 +102,7 @@ export const vGroupItemReorder: Directive<HTMLElement, ItemReorderBinding> = {
     if (state) state.value = value
   },
   unmounted(el) {
-    reorderStates.get(el)?.cleanup()
+    reorderStates.get(el)?.cleanup?.()
     reorderStates.delete(el)
   }
 }
@@ -114,12 +114,12 @@ interface ItemDragBinding {
 
 const dragStates = new WeakMap<
   HTMLElement,
-  { value: ItemDragBinding; cleanup: () => void }
+  { value: ItemDragBinding; cleanup?: () => void }
 >()
 
 export const vGroupItemDrag: Directive<HTMLElement, ItemDragBinding> = {
   mounted(el, { value }) {
-    const state = { value, cleanup: () => {} }
+    const state: { value: ItemDragBinding; cleanup?: () => void } = { value }
     state.cleanup = draggable({
       element: el,
       dragHandle: el.querySelector('.drag-handle') ?? undefined,
@@ -136,7 +136,7 @@ export const vGroupItemDrag: Directive<HTMLElement, ItemDragBinding> = {
     if (state) state.value = value
   },
   unmounted(el) {
-    dragStates.get(el)?.cleanup()
+    dragStates.get(el)?.cleanup?.()
     dragStates.delete(el)
   }
 }
@@ -147,7 +147,7 @@ interface GroupDropBinding {
 
 const groupDropStates = new WeakMap<
   HTMLElement,
-  { value: GroupDropBinding; cleanup: () => void }
+  { value: GroupDropBinding; cleanup?: () => void }
 >()
 
 const GROUP_DROP_ATTR = 'data-group-drop-id'
@@ -216,7 +216,7 @@ function setupListToGroupBridge() {
 
 export const vGroupDropTarget: Directive<HTMLElement, GroupDropBinding> = {
   mounted(el, { value }) {
-    const state = { value, cleanup: () => {} }
+    const state: { value: GroupDropBinding; cleanup?: () => void } = { value }
     const store = useInputGroupStore()
 
     el.setAttribute(GROUP_DROP_ATTR, value.groupId)
@@ -249,7 +249,7 @@ export const vGroupDropTarget: Directive<HTMLElement, GroupDropBinding> = {
     el.setAttribute(GROUP_DROP_ATTR, value.groupId)
   },
   unmounted(el) {
-    groupDropStates.get(el)?.cleanup()
+    groupDropStates.get(el)?.cleanup?.()
     groupDropStates.delete(el)
     el.removeAttribute(GROUP_DROP_ATTR)
     bridgeRefCount--
@@ -263,12 +263,12 @@ export const vGroupDropTarget: Directive<HTMLElement, GroupDropBinding> = {
 
 const ungroupDropStates = new WeakMap<
   HTMLElement,
-  { value: boolean; cleanup: () => void }
+  { value: boolean; cleanup?: () => void }
 >()
 
 export const vGroupUngroupTarget: Directive<HTMLElement, boolean> = {
   mounted(el, { value }) {
-    const state = { value, cleanup: () => {} }
+    const state: { value: boolean; cleanup?: () => void } = { value }
     const store = useInputGroupStore()
     state.cleanup = dropTargetForElements({
       element: el,
@@ -289,7 +289,7 @@ export const vGroupUngroupTarget: Directive<HTMLElement, boolean> = {
     if (state) state.value = value
   },
   unmounted(el) {
-    ungroupDropStates.get(el)?.cleanup()
+    ungroupDropStates.get(el)?.cleanup?.()
     ungroupDropStates.delete(el)
   }
 }
