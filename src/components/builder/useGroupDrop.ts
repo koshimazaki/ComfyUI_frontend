@@ -42,22 +42,21 @@ interface ItemReorderBinding {
   groupId: string
 }
 
-type ItemReorderEl = HTMLElement & {
-  __reorderCleanup?: () => void
-  __reorderValue?: ItemReorderBinding
-}
+const reorderStates = new WeakMap<
+  HTMLElement,
+  { value: ItemReorderBinding; cleanup: () => void }
+>()
 
 export const vGroupItemReorder: Directive<HTMLElement, ItemReorderBinding> = {
   mounted(el, { value }) {
-    const typedEl = el as ItemReorderEl
-    typedEl.__reorderValue = value
+    const state = { value, cleanup: () => {} }
     const store = useInputGroupStore()
 
-    typedEl.__reorderCleanup = dropTargetForElements({
+    state.cleanup = dropTargetForElements({
       element: el,
       canDrop: ({ source }) => {
         const dragKey = getDragItemKey(source.data)
-        return !!dragKey && dragKey !== typedEl.__reorderValue!.itemKey
+        return !!dragKey && dragKey !== state.value.itemKey
       },
       onDrag: ({ location }) => {
         setIndicator(el, getEdgeTriZone(el, location.current.input.clientY))
@@ -71,7 +70,7 @@ export const vGroupItemReorder: Directive<HTMLElement, ItemReorderBinding> = {
         const dragKey = getDragItemKey(source.data)
         if (!dragKey) return
 
-        const { groupId, itemKey } = typedEl.__reorderValue!
+        const { groupId, itemKey } = state.value
         const edge = getEdgeTriZone(el, location.current.input.clientY)
         const sameGroup = !!store
           .findGroup(groupId)
@@ -96,12 +95,15 @@ export const vGroupItemReorder: Directive<HTMLElement, ItemReorderBinding> = {
         }
       }
     })
+    reorderStates.set(el, state)
   },
   updated(el, { value }) {
-    ;(el as ItemReorderEl).__reorderValue = value
+    const state = reorderStates.get(el)
+    if (state) state.value = value
   },
   unmounted(el) {
-    ;(el as ItemReorderEl).__reorderCleanup?.()
+    reorderStates.get(el)?.cleanup()
+    reorderStates.delete(el)
   }
 }
 
@@ -110,30 +112,32 @@ interface ItemDragBinding {
   groupId: string
 }
 
-type ItemDragEl = HTMLElement & {
-  __dragCleanup?: () => void
-  __dragValue?: ItemDragBinding
-}
+const dragStates = new WeakMap<
+  HTMLElement,
+  { value: ItemDragBinding; cleanup: () => void }
+>()
 
 export const vGroupItemDrag: Directive<HTMLElement, ItemDragBinding> = {
   mounted(el, { value }) {
-    const typedEl = el as ItemDragEl
-    typedEl.__dragValue = value
-    typedEl.__dragCleanup = draggable({
+    const state = { value, cleanup: () => {} }
+    state.cleanup = draggable({
       element: el,
       dragHandle: el.querySelector('.drag-handle') ?? undefined,
       getInitialData: () => ({
         type: 'group-item',
-        itemKey: typedEl.__dragValue!.itemKey,
-        sourceGroupId: typedEl.__dragValue!.groupId
+        itemKey: state.value.itemKey,
+        sourceGroupId: state.value.groupId
       })
     })
+    dragStates.set(el, state)
   },
   updated(el, { value }) {
-    ;(el as ItemDragEl).__dragValue = value
+    const state = dragStates.get(el)
+    if (state) state.value = value
   },
   unmounted(el) {
-    ;(el as ItemDragEl).__dragCleanup?.()
+    dragStates.get(el)?.cleanup()
+    dragStates.delete(el)
   }
 }
 
@@ -141,10 +145,10 @@ interface GroupDropBinding {
   groupId: string
 }
 
-type GroupDropEl = HTMLElement & {
-  __groupDropCleanup?: () => void
-  __groupDropValue?: GroupDropBinding
-}
+const groupDropStates = new WeakMap<
+  HTMLElement,
+  { value: GroupDropBinding; cleanup: () => void }
+>()
 
 const GROUP_DROP_ATTR = 'data-group-drop-id'
 
@@ -212,8 +216,7 @@ function setupListToGroupBridge() {
 
 export const vGroupDropTarget: Directive<HTMLElement, GroupDropBinding> = {
   mounted(el, { value }) {
-    const typedEl = el as GroupDropEl
-    typedEl.__groupDropValue = value
+    const state = { value, cleanup: () => {} }
     const store = useInputGroupStore()
 
     el.setAttribute(GROUP_DROP_ATTR, value.groupId)
@@ -221,12 +224,12 @@ export const vGroupDropTarget: Directive<HTMLElement, GroupDropBinding> = {
     bridgeRefCount++
     if (bridgeRefCount === 1) setupListToGroupBridge()
 
-    typedEl.__groupDropCleanup = dropTargetForElements({
+    state.cleanup = dropTargetForElements({
       element: el,
       canDrop: ({ source }) => {
         const itemKey = getDragItemKey(source.data)
         if (!itemKey) return false
-        return !!store.findGroup(typedEl.__groupDropValue!.groupId)
+        return !!store.findGroup(state.value.groupId)
       },
       onDragEnter: () => el.classList.add('group-drag-over'),
       onDragLeave: () => el.classList.remove('group-drag-over'),
@@ -235,16 +238,19 @@ export const vGroupDropTarget: Directive<HTMLElement, GroupDropBinding> = {
         if (location.current.dropTargets[0]?.element !== el) return
         const itemKey = getDragItemKey(source.data)
         if (!itemKey) return
-        store.addItemToGroup(typedEl.__groupDropValue!.groupId, itemKey)
+        store.addItemToGroup(state.value.groupId, itemKey)
       }
     })
+    groupDropStates.set(el, state)
   },
   updated(el, { value }) {
-    ;(el as GroupDropEl).__groupDropValue = value
+    const state = groupDropStates.get(el)
+    if (state) state.value = value
     el.setAttribute(GROUP_DROP_ATTR, value.groupId)
   },
   unmounted(el) {
-    ;(el as GroupDropEl).__groupDropCleanup?.()
+    groupDropStates.get(el)?.cleanup()
+    groupDropStates.delete(el)
     el.removeAttribute(GROUP_DROP_ATTR)
     bridgeRefCount--
     if (bridgeRefCount === 0) {
@@ -255,20 +261,19 @@ export const vGroupDropTarget: Directive<HTMLElement, GroupDropBinding> = {
   }
 }
 
-type UngroupDropElement = HTMLElement & {
-  __ungroupCleanup?: () => void
-  __ungroupEnabled?: boolean
-}
+const ungroupDropStates = new WeakMap<
+  HTMLElement,
+  { value: boolean; cleanup: () => void }
+>()
 
 export const vGroupUngroupTarget: Directive<HTMLElement, boolean> = {
   mounted(el, { value }) {
-    const element = el as UngroupDropElement
-    element.__ungroupEnabled = value
+    const state = { value, cleanup: () => {} }
     const store = useInputGroupStore()
-    element.__ungroupCleanup = dropTargetForElements({
+    state.cleanup = dropTargetForElements({
       element: el,
       canDrop: ({ source }) =>
-        !!element.__ungroupEnabled && getDragItemKey(source.data) !== null,
+        state.value && getDragItemKey(source.data) !== null,
       onDrop: ({ source, location }) => {
         if (location.current.dropTargets[0]?.element !== el) return
         const key = getDragItemKey(source.data)
@@ -277,11 +282,15 @@ export const vGroupUngroupTarget: Directive<HTMLElement, boolean> = {
           store.removeItemFromGroup(groupId, key)
       }
     })
+    ungroupDropStates.set(el, state)
   },
   updated(el, { value }) {
-    ;(el as UngroupDropElement).__ungroupEnabled = value
+    const state = ungroupDropStates.get(el)
+    if (state) state.value = value
   },
   unmounted(el) {
-    ;(el as UngroupDropElement).__ungroupCleanup?.()
+    ungroupDropStates.get(el)?.cleanup()
+    ungroupDropStates.delete(el)
   }
+}
 }
