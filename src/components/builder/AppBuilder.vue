@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 
 import AppModeWidgetList from '@/components/builder/AppModeWidgetList.vue'
 import InputGroupAccordion from '@/components/builder/InputGroupAccordion.vue'
+import { groupPosition } from '@/components/builder/useInputGroups'
 import { vGroupUngroupTarget } from '@/components/builder/useGroupDrop'
 import DraggableList from '@/components/common/DraggableList.vue'
 import IoItem from '@/components/builder/IoItem.vue'
@@ -70,14 +71,6 @@ const ungroupedSelectedInputs = computed<LinearInput[]>({
     appModeStore.selectedInputs = [...inputs, ...groupedInputs]
   }
 })
-
-function groupPosition(index: number): 'first' | 'middle' | 'last' | 'only' {
-  const count = inputGroupStore.inputGroups.length
-  if (count === 1) return 'only'
-  if (index === 0) return 'first'
-  if (index === count - 1) return 'last'
-  return 'middle'
-}
 
 const outputsWithState = computed<[NodeId, string][]>(() =>
   appModeStore.selectedOutputs.map((nodeId) => [
@@ -236,7 +229,7 @@ const renderedInputs = computed<[string, MaybeRef<BoundStyle> | undefined][]>(
             :key="group.id"
             :group
             builder-mode
-            :position="groupPosition(index)"
+            :position="groupPosition(index, inputGroupStore.inputGroups.length)"
           />
         </div>
         <div class="flex-1" />

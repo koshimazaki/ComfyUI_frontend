@@ -12,6 +12,16 @@ type GroupRow =
   | { type: 'single'; item: ResolvedGroupItem }
   | { type: 'pair'; items: [ResolvedGroupItem, ResolvedGroupItem] }
 
+export function groupPosition(
+  index: number,
+  count: number
+): 'first' | 'middle' | 'last' | 'only' {
+  if (count === 1) return 'only'
+  if (index === 0) return 'first'
+  if (index === count - 1) return 'last'
+  return 'middle'
+}
+
 export function autoGroupName(
   group: InputGroup,
   selections: readonly ResolvedSelection[]

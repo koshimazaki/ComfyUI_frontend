@@ -39,7 +39,8 @@ const { t } = useI18n()
 const inputGroupStore = useInputGroupStore()
 const resolvedSelections = useResolvedSelectedInputs()
 
-const isOpen = ref(builderMode)
+// Inputs should be immediately visible in published apps; users may collapse groups.
+const isOpen = ref(true)
 const isRenaming = ref(false)
 const showUngroupDialog = ref(false)
 

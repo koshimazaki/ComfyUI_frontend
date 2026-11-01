@@ -62,7 +62,6 @@ const itemRows = computed(() =>
           :widget-ids="[item.key]"
           builder-mode
           :draggable="false"
-          hide-actions
         />
       </div>
     </div>

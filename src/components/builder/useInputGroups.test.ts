@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import type { ResolvedSelection } from '@/components/builder/useResolvedSelectedInputs'
 import { LGraphNode } from '@/lib/litegraph/src/litegraph'
@@ -7,13 +7,10 @@ import { toNodeId } from '@/types/nodeId'
 import { widgetId } from '@/types/widgetId'
 import type { WidgetId } from '@/types/widgetId'
 
-vi.mock(import('@/i18n'), () => ({
-  t: (key: string) => key
-}))
-
 import {
   autoGroupName,
   groupedByPair,
+  groupPosition,
   resolveGroupItems
 } from './useInputGroups'
 
@@ -97,7 +94,7 @@ describe('autoGroupName', () => {
 
   it('returns the untitled label when no selected input matches', () => {
     expect(autoGroupName(makeGroup([{ key: key('missing') }]), [])).toBe(
-      'linearMode.groups.untitled'
+      'Untitled group'
     )
   })
 })
@@ -120,5 +117,16 @@ describe('resolveGroupItems', () => {
     expect(resolveGroupItems(group, selections)).toEqual([
       { key: widthId, pairId: 'pair' }
     ])
+  })
+})
+
+describe('groupPosition', () => {
+  it.for([
+    { index: 0, count: 1, expected: 'only' },
+    { index: 0, count: 3, expected: 'first' },
+    { index: 1, count: 3, expected: 'middle' },
+    { index: 2, count: 3, expected: 'last' }
+  ] as const)('returns $expected for index $index of $count', ({ index, count, expected }) => {
+    expect(groupPosition(index, count)).toBe(expected)
   })
 })

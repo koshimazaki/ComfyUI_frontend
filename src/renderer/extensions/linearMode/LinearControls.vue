@@ -7,7 +7,7 @@ import { useI18n } from 'vue-i18n'
 
 import AppModeWidgetList from '@/components/builder/AppModeWidgetList.vue'
 import InputGroupAccordion from '@/components/builder/InputGroupAccordion.vue'
-import { resolveGroupItems } from '@/components/builder/useInputGroups'
+import { groupPosition, resolveGroupItems } from '@/components/builder/useInputGroups'
 import { useResolvedSelectedInputs } from '@/components/builder/useResolvedSelectedInputs'
 import { useErrorOverlayState } from '@/components/error/useErrorOverlayState'
 import Loader from '@/components/loader/Loader.vue'
@@ -201,15 +201,7 @@ function replayAppModeTour() {
           :key="group.id"
           :group
           :mobile
-          :position="
-            visibleInputGroups.length === 1
-              ? 'only'
-              : index === 0
-                ? 'first'
-                : index === visibleInputGroups.length - 1
-                  ? 'last'
-                  : 'middle'
-          "
+          :position="groupPosition(index, visibleInputGroups.length)"
         />
       </section>
       <Teleport

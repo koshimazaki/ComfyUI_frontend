@@ -197,11 +197,24 @@ function buildMenuEntries(action: WidgetEntry['action']): MenuItem[] {
 
   if (!builderMode) return entries
 
+  const currentGroup = inputGroupStore.inputGroups.find((group) =>
+    group.items.some((item) => item.key === action.widgetId)
+  )
+
   entries.push({ separator: true })
+  if (currentGroup) {
+    entries.push({
+      label: t('linearMode.groups.removeFromGroup'),
+      icon: 'icon-[lucide--ungroup]',
+      command: () =>
+        inputGroupStore.removeItemFromGroup(currentGroup.id, action.widgetId)
+    })
+  }
   for (const group of inputGroupStore.inputGroups) {
+    if (group.id === currentGroup?.id) continue
     const name = group.name ?? autoGroupName(group, resolvedInputs.value)
     entries.push({
-      label: `${t('linearMode.groups.addToGroup')}: ${name}`,
+      label: t('linearMode.groups.addToGroupNamed', { name }),
       icon: 'icon-[lucide--group]',
       command: () => inputGroupStore.addItemToGroup(group.id, action.widgetId)
     })

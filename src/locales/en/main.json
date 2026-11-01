@@ -4717,6 +4717,8 @@
       "ungroupDescription": "The inputs in this group will be moved back to the main list.",
       "emptyGroup": "Add inputs to this group",
       "addToGroup": "Add to group",
+      "addToGroupNamed": "Add to group: {name}",
+      "removeFromGroup": "Remove from group",
       "newGroup": "New group"
     }
   },
